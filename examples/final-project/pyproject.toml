@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "final-project"
+version = "1.0.0"
+description = "FastAPI 실전 완성형 Todo API"
+authors = ["learner"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.133.0"
+uvicorn = {extras = ["standard"], version = "^0.34.0"}
+pydantic = {extras = ["email"], version = "^2.0"}
+pydantic-settings = "^2.0"
+sqlalchemy = "^2.0"
+python-jose = {extras = ["cryptography"], version = "^3.3"}
+bcrypt = "^4.0"
+python-multipart = "^0.0.20"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0"
+httpx = "^0.28.0"
+anyio = {extras = ["trio"], version = "^4.0"}
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

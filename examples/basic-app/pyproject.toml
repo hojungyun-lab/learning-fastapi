@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "basic-app"
+version = "0.1.0"
+description = "FastAPI 기초 단계 통합 데모 — in-memory CRUD API"
+authors = ["learner"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.133.0"
+uvicorn = {extras = ["standard"], version = "^0.34.0"}
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

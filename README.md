@@ -67,7 +67,7 @@ poetry shell
 
 ```bash
 # 레포지토리 클론
-git clone <repository-url> learning-fastapi
+git clone https://github.com/hojungyun-lab/learning-fastapi.git
 cd learning-fastapi
 
 # 의존성 설치
@@ -132,7 +132,7 @@ poetry run uvicorn app.main:app --reload
 | 항목 | 버전 | 용도 |
 |------|------|------|
 | FastAPI | 0.133.x | 웹 프레임워크 |
-| Python | 3.12+ | 런타임 |
+| Python | 3.11+ | 런타임 |
 | Poetry | 2.x | 패키지 관리 |
 | Pydantic | v2 | 데이터 검증/직렬화 |
 | SQLAlchemy | 2.0 | ORM / 데이터베이스 |
