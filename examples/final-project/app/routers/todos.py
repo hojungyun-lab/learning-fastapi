@@ -1,5 +1,6 @@
 # app/routers/todos.py — Todo CRUD 라우터
 from fastapi import APIRouter, Query, status
+from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
 from app.dependencies import DbSession, CurrentUser, Pagination
@@ -12,7 +13,7 @@ router = APIRouter(prefix="/todos", tags=["Todos"])
 
 def _get_user_todo(db: Session, todo_id: int, user_id: int) -> Todo:
     """사용자 소유의 Todo를 조회하고, 없거나 권한이 없으면 예외 발생"""
-    todo = db.query(Todo).filter(Todo.id == todo_id).first()
+    todo = db.scalar(select(Todo).where(Todo.id == todo_id))
     if not todo:
         raise NotFoundError("Todo", todo_id)
     if todo.owner_id != user_id:
@@ -33,24 +34,28 @@ def list_todos(
     현재 사용자의 Todo 목록 조회.
     필터, 검색, 페이지네이션을 지원합니다.
     """
-    query = db.query(Todo).filter(Todo.owner_id == user.id)
+    stmt = select(Todo).where(Todo.owner_id == user.id)
 
     if completed is not None:
-        query = query.filter(Todo.completed == completed)
+        stmt = stmt.where(Todo.completed == completed)
     if search:
-        query = query.filter(Todo.title.ilike(f"%{search}%"))
+        stmt = stmt.where(Todo.title.ilike(f"%{search}%"))
     if priority is not None:
-        query = query.filter(Todo.priority == priority)
+        stmt = stmt.where(Todo.priority == priority)
 
-    total = query.count()
-    items = (
-        query.order_by(Todo.priority.desc(), Todo.created_at.desc())
+    # 전체 개수 조회
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total = db.scalar(count_stmt) or 0
+
+    # 페이징된 결과 조회
+    items_stmt = (
+        stmt.order_by(Todo.priority.desc(), Todo.created_at.desc())
         .offset(pagination.skip)
         .limit(pagination.limit)
-        .all()
     )
+    items = db.scalars(items_stmt).all()
 
-    return TodoListResponse(total=total, items=items)
+    return TodoListResponse(total=total, items=list(items))
 
 
 @router.post("", response_model=TodoResponse, status_code=status.HTTP_201_CREATED)
