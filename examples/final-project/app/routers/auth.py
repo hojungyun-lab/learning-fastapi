@@ -4,12 +4,11 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 from app.auth import verify_password, get_password_hash, create_access_token
 from app.config import settings
-from app.database import get_db
-from app.dependencies import CurrentUser
+from app.dependencies import CurrentUser, DbSession
 from app.exceptions import DuplicateError
 from app.models import User
 from app.schemas import UserCreate, UserResponse, Token
@@ -18,12 +17,12 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
 @router.post("/register", response_model=UserResponse, status_code=201)
-def register(user: UserCreate, db: Annotated[Session, Depends(get_db)]):
+def register(user: UserCreate, db: DbSession):
     """회원가입"""
     # 중복 검사
-    if db.query(User).filter(User.username == user.username).first():
+    if db.scalar(select(User).where(User.username == user.username)):
         raise DuplicateError("사용자 이름", user.username)
-    if db.query(User).filter(User.email == user.email).first():
+    if db.scalar(select(User).where(User.email == user.email)):
         raise DuplicateError("이메일", user.email)
 
     db_user = User(
@@ -40,10 +39,10 @@ def register(user: UserCreate, db: Annotated[Session, Depends(get_db)]):
 @router.post("/token", response_model=Token)
 def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    db: Annotated[Session, Depends(get_db)],
+    db: DbSession,
 ):
     """로그인 — JWT 토큰 발급"""
-    user = db.query(User).filter(User.username == form_data.username).first()
+    user = db.scalar(select(User).where(User.username == form_data.username))
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

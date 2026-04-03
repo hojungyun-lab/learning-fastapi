@@ -6,6 +6,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 import bcrypt
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -57,7 +58,7 @@ def get_current_user(
     except (JWTError, ValueError):
         raise credentials_exception
 
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.scalar(select(User).where(User.id == user_id))
     if user is None:
         raise credentials_exception
     if not user.is_active:
